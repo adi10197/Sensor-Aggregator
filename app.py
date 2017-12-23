@@ -1,12 +1,15 @@
 from flask import Flask
 from flask_restful import Resource, Api
+from flask_cors import CORS
 
 app = Flask(__name__)
 api = Api(app)
 
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
+
 class temperature(Resource):
     def get(self):
-        return {'temperature': 25}
+        return {'temperature': 23}
 
 class phSensor(Resource):
     def get(self):

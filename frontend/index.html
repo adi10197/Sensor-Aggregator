@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta http-equiv="Access-Control-Allow-Origin" content="http://localhost:5000/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
+  <title>BITS Pilani</title>
+
+  <!-- CSS  -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+  <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
+    crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js" integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log=="
+    crossorigin=""></script>
+</head>
+<body>
+  <nav class="light-blue lighten-1" role="navigation">
+    <div class="nav-wrapper container"><a id="logo-container" href="#" class="brand-logo">BITS Pilani</a>
+      <!-- <ul class="right hide-on-med-and-down">
+        <li><a href="#">Navbar Link</a></li>
+      </ul> -->
+
+      <!-- <ul id="nav-mobile" class="side-nav">
+        <li><a href="#">Navbar Link</a></li>
+      </ul> -->
+      <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
+    </div>
+  </nav>
+  <div class="section no-pad-bot" id="index-banner">
+    <div class="container">
+      <br><br>
+      <h1 class="header center orange-text">IoT Setup</h1>
+      <div class="row center">
+        <h5 class="header col s12 light">For the Waste Water Treatment Sensors</h5>
+      </div>
+      <!-- <div class="row center">
+        <a href="http://materializecss.com/getting-started.html" id="download-button" class="btn-large waves-effect waves-light orange">Get Started</a>
+      </div> -->
+      <br><br>
+
+    </div>
+  </div>
+
+
+  <div class="container">
+    <div class="section">
+      <div class="row">
+        <div id="mapid" style="height: 400px;"></div>
+        <!-- <div id="control">
+
+        </div> -->
+        <div class="row">
+          <div id="control" class="col l12">
+            
+          </div>
+        </div>
+      </div>
+
+      <script>
+        var mymap = L.map('mapid').setView([15.391, 73.878], 2.4);
+
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+          maxZoom: 18,
+          attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+          '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+          'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+          id: 'mapbox.streets'
+        }).addTo(mymap);
+
+        var markerList = [
+          {
+            name: "BITS Pilani Goa",
+            lat: 15.391,
+            lng: 73.878,
+            sensors: [
+              {
+                name: "Temperature",
+                url: "http://localhost:5000/temperature",
+                vari: "temperature"
+              },
+              {
+                name: "pH Sensor",
+                url: "http://localhost:5000/phSensor",
+                vari: "phSensor"
+              }
+            ]
+          },
+          {
+            name: "Cranfield University",
+            lat: 52.074461,
+            lng: -0.629289,
+            sensors: [
+              {
+                name: "pH Sensor",
+                url: "http://localhost:5000/phSensor",
+                vari: "phSensor"
+              }
+            ]
+          }
+        ]
+        var markers = []
+
+        for (i = 0; i < markerList.length; i++) {
+          markers.push(L.marker([markerList[i].lat, markerList[i].lng], { title: markerList[i].name }).addTo(mymap).on('click', onClick));
+        }
+
+        for (i = 0; i < markers.length; i++) {
+          markers[i].bindPopup("<b>" + markerList[i].name + "</b>");
+        }
+        
+        function sensorAjax(url, vari) {
+            var succeed = "";
+            $.ajax({
+              async: false,
+              url: url, success: function (data) {
+                succeed = JSON.stringify(data[vari]);
+              }
+            });
+            return succeed;
+          }
+
+        function onClick(e) {
+          var div = document.getElementById('control');
+          for (i = 0; i < markers.length; i++) {
+            if (Object.is(markers[i],(e.target))) {
+              div.innerHTML = '';
+              for (j = 0; j < markerList[i].sensors.length; j++) {
+              div.innerHTML += `
+              <div id="control" class="col l4">
+              <div class="card blue lighten-4">
+                <div class="card-content">
+                  <span class="card-title">`
+                  + markerList[i].sensors[j].name +
+                    `</span>
+                  <p>`
+                  + markerList[i].sensors[j].vari + ' : ' + sensorAjax(markerList[i].sensors[j].url, markerList[i].sensors[j].vari) +
+                    `</p>
+                </div>
+                <div class="card-action">
+                  <a href="#">Statistics</a>
+                </div>
+              </div>
+            </div>`
+            }
+            }
+          }
+        }
+      </script>
+
+      <!--   Icon Section   -->
+      <!-- <div class="row">
+        <div class="col s12 m4">
+          <div class="icon-block">
+            <h2 class="center light-blue-text"><i class="material-icons">flash_on</i></h2>
+            <h5 class="center">Speeds up development</h5>
+
+            <p class="light">We did most of the heavy lifting for you to provide a default stylings that incorporate our custom components. Additionally, we refined animations and transitions to provide a smoother experience for developers.</p>
+          </div>
+        </div>
+
+        <div class="col s12 m4">
+          <div class="icon-block">
+            <h2 class="center light-blue-text"><i class="material-icons">group</i></h2>
+            <h5 class="center">User Experience Focused</h5>
+
+            <p class="light">By utilizing elements and principles of Material Design, we were able to create a framework that incorporates components and animations that provide more feedback to users. Additionally, a single underlying responsive system across all platforms allow for a more unified user experience.</p>
+          </div>
+        </div>
+
+        <div class="col s12 m4">
+          <div class="icon-block">
+            <h2 class="center light-blue-text"><i class="material-icons">settings</i></h2>
+            <h5 class="center">Easy to work with</h5>
+
+            <p class="light">We have provided detailed documentation as well as specific code examples to help new users get started. We are also always open to feedback and can answer any questions a user may have about Materialize.</p>
+          </div>
+        </div>
+      </div> -->
+
+    </div>
+    <br><br>
+  </div>
+
+  <!-- <footer class="page-footer orange">
+    <div class="container">
+      <div class="row">
+        <div class="col l6 s12">
+          <h5 class="white-text">Company Bio</h5>
+          <p class="grey-text text-lighten-4">We are a team of college students working on this project like it's our full time job. Any amount would help support and continue development on this project and is greatly appreciated.</p>
+
+
+        </div>
+        <div class="col l3 s12">
+          <h5 class="white-text">Settings</h5>
+          <ul>
+            <li><a class="white-text" href="#!">Link 1</a></li>
+            <li><a class="white-text" href="#!">Link 2</a></li>
+            <li><a class="white-text" href="#!">Link 3</a></li>
+            <li><a class="white-text" href="#!">Link 4</a></li>
+          </ul>
+        </div>
+        <div class="col l3 s12">
+          <h5 class="white-text">Connect</h5>
+          <ul>
+            <li><a class="white-text" href="#!">Link 1</a></li>
+            <li><a class="white-text" href="#!">Link 2</a></li>
+            <li><a class="white-text" href="#!">Link 3</a></li>
+            <li><a class="white-text" href="#!">Link 4</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-copyright">
+      <div class="container">
+      Made by <a class="orange-text text-lighten-3" href="http://materializecss.com">Materialize</a>
+      </div>
+    </div>
+  </footer> -->
+
+
+  <!--  Scripts-->
+  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="js/materialize.js"></script>
+  <script src="js/init.js"></script>
+
+  </body>
+</html>
