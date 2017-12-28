@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection"/>
   <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+  <link href="css/c3.css" rel="stylesheet">
 
 
   <meta charset="utf-8" />
@@ -62,8 +63,22 @@
           <div id="control" class="col l12">
             
           </div>
+          <div class="col l12">
+            <div class="card purple lighten-3">
+              <div class="card-content">
+                <div id="chart">
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
+<script src="js/d3.min.js" charset="utf-8"></script>
+<script src="js/c3.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="js/materialize.js"></script>
+<script src="js/init.js"></script>
 
       <script>
         var mymap = L.map('mapid').setView([15.391, 73.878], 2.4);
@@ -81,31 +96,42 @@
             name: "BITS Pilani Goa",
             lat: 15.391,
             lng: 73.878,
+            url: "http://localhost:5000/sensorData",
             sensors: [
               {
-                name: "Temperature",
-                url: "http://localhost:5000/temperature",
-                vari: "temperature"
+                name: "Sensor 1",
+                vari: "sensor1",
               },
               {
-                name: "pH Sensor",
-                url: "http://localhost:5000/phSensor",
-                vari: "phSensor"
-              }
+                name: "Sensor 2",
+                vari: "sensor2",
+              },
+              {
+                name: "Sensor 3",
+                vari: "sensor3",
+              },
+              {
+                name: "Sensor 4",
+                vari: "sensor4",
+              },
+              {
+                name: "Sensor 5",
+                vari: "sensor5",
+              },
+              {
+                name: "Sensor 6",
+                vari: "sensor6",
+              },
+              {
+                name: "Sensor 7",
+                vari: "sensor7",
+              },
+              {
+                name: "Sensor 8",
+                vari: "sensor8",
+              },
             ]
           },
-          {
-            name: "Cranfield University",
-            lat: 52.074461,
-            lng: -0.629289,
-            sensors: [
-              {
-                name: "pH Sensor",
-                url: "http://localhost:5000/phSensor",
-                vari: "phSensor"
-              }
-            ]
-          }
         ]
         var markers = []
 
@@ -117,36 +143,43 @@
           markers[i].bindPopup("<b>" + markerList[i].name + "</b>");
         }
         
-        function sensorAjax(url, vari) {
+        function sensorAjax(url) {
             var succeed = "";
             $.ajax({
               async: false,
               url: url, success: function (data) {
-                succeed = JSON.stringify(data[vari]);
+                succeed = JSON.stringify(data);
               }
             });
             return succeed;
           }
+
+        function timePlot(sensor) {
+          console.log(sensor)
+        }
 
         function onClick(e) {
           var div = document.getElementById('control');
           for (i = 0; i < markers.length; i++) {
             if (Object.is(markers[i],(e.target))) {
               div.innerHTML = '';
+              var sensorData = JSON.parse(sensorAjax(markerList[i].url));
               for (j = 0; j < markerList[i].sensors.length; j++) {
+                var k = j+1
+                console.log(sensorData[sensorData.length-1][markerList[i].sensors[j].vari])
               div.innerHTML += `
               <div id="control" class="col l4">
-              <div class="card blue lighten-4">
+              <div class="card indigo accent-3">
                 <div class="card-content">
                   <span class="card-title">`
                   + markerList[i].sensors[j].name +
                     `</span>
                   <p>`
-                  + markerList[i].sensors[j].vari + ' : ' + sensorAjax(markerList[i].sensors[j].url, markerList[i].sensors[j].vari) +
+                  + markerList[i].sensors[j].vari + ' : ' + sensorData[sensorData.length-1][markerList[i].sensors[j].vari] +
                     `</p>
                 </div>
                 <div class="card-action">
-                  <a href="#">Statistics</a>
+                  <a href="#" data-sensor="sensor` + k + `" onclick="openMap(this);">Time Plot</a>
                 </div>
               </div>
             </div>`
@@ -154,6 +187,30 @@
             }
           }
         }
+        
+      var sensorData = JSON.parse(sensorAjax(markerList[0].url));
+
+      function openMap(d) {
+        sensor = d.getAttribute('data-sensor')
+        function getVar(item, index) {
+          return item[sensor]
+        }
+
+        var x = sensorData.map(getVar);
+        x = x.map(String)
+        x.unshift(sensor)
+
+        var chart = c3.generate({
+          bindto: '#chart',
+          data: {
+              columns: [
+                  x
+              ],
+              type: 'bar',
+          },
+      });
+
+      }
       </script>
 
       <!--   Icon Section   -->
@@ -228,9 +285,5 @@
 
 
   <!--  Scripts-->
-  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
-  <script src="js/materialize.js"></script>
-  <script src="js/init.js"></script>
-
   </body>
 </html>
