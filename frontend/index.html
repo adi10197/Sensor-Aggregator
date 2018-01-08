@@ -63,6 +63,9 @@
           <div id="control" class="col l12">
             
           </div>
+          <div id="control-sensors" class="col l12">
+            
+          </div>
           <div class="col l12">
             <div class="card purple lighten-3">
               <div class="card-content">
@@ -72,6 +75,46 @@
             </div>
 
           </div>
+
+            
+
+        </div>
+        <div class = "row" id="inter">
+          <div id="drag-1" class="draggable">
+            <img src="/img/bathroom.png" style="width:100%">
+          </div>
+          <div id="drag-2" class="draggable">
+            <img src="/img/tank.png" style="width:100%">
+          </div>
+
+          <style>
+            #drag-1,
+            #drag-2 {
+              width: 10%;
+              height: 10%;
+              min-height: 2.5em;
+              margin: 10%;
+
+              background-color: #29e;
+              color: white;
+
+              border-radius: 0.75em;
+              padding: 1%;
+
+              -webkit-transform: translate(0px, 0px);
+              transform: translate(0px, 0px);
+            }
+
+            #drag-me::before {
+              content: "#" attr(id);
+              font-weight: bold;
+            }
+
+            #inter {
+              background-color: #666;
+              max-height: 400px;
+            }
+          </style>
         </div>
       </div>
 <script src="js/d3.min.js" charset="utf-8"></script>
@@ -79,9 +122,12 @@
 <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
 <script src="js/materialize.js"></script>
 <script src="js/init.js"></script>
+<script src="js/interact.js"></script>
 
       <script>
         var mymap = L.map('mapid').setView([15.391, 73.878], 2.4);
+        var sensorTypes;
+        var sensorData;
 
         L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
           maxZoom: 18,
@@ -97,40 +143,8 @@
             lat: 15.391,
             lng: 73.878,
             url: "http://localhost:5000/sensorData",
-            sensors: [
-              {
-                name: "Sensor 1",
-                vari: "sensor1",
-              },
-              {
-                name: "Sensor 2",
-                vari: "sensor2",
-              },
-              {
-                name: "Sensor 3",
-                vari: "sensor3",
-              },
-              {
-                name: "Sensor 4",
-                vari: "sensor4",
-              },
-              {
-                name: "Sensor 5",
-                vari: "sensor5",
-              },
-              {
-                name: "Sensor 6",
-                vari: "sensor6",
-              },
-              {
-                name: "Sensor 7",
-                vari: "sensor7",
-              },
-              {
-                name: "Sensor 8",
-                vari: "sensor8",
-              },
-            ]
+            typeurl: "http://localhost:5000/sensorTypes",
+            
           },
         ]
         var markers = []
@@ -163,32 +177,52 @@
           for (i = 0; i < markers.length; i++) {
             if (Object.is(markers[i],(e.target))) {
               div.innerHTML = '';
-              var sensorData = JSON.parse(sensorAjax(markerList[i].url));
-              for (j = 0; j < markerList[i].sensors.length; j++) {
-                var k = j+1
-                console.log(sensorData[sensorData.length-1][markerList[i].sensors[j].vari])
+              sensorTypes = JSON.parse(sensorAjax(markerList[i].typeurl));
+              sensorData = JSON.parse(sensorAjax(markerList[i].url));
+              for(var property in sensorTypes){
+                  div.innerHTML += `
+                    <div id="control" class="col l4">
+                    <div class="card indigo accent-1">
+                      <div class="card-content">
+                        <span class="card-title">`
+                        + property +
+                          `</span>
+                      </div>
+                      <div class="card-action">
+                        <a href="#" data-sensor="` + property + `" onclick="openSensors(this);">Check Sensors</a>
+                      </div>
+                    </div>
+                  </div>`
+              }
+            }
+          }
+        }
+      
+      function openSensors(d){
+        sensor = d.getAttribute('data-sensor')
+        console.log(sensor)
+        var div = document.getElementById('control-sensors');
+        div.innerHTML = '';
+        for (j = 1; j <= sensorTypes[sensor].length; j++) {
               div.innerHTML += `
               <div id="control" class="col l4">
               <div class="card indigo accent-3">
                 <div class="card-content">
                   <span class="card-title">`
-                  + markerList[i].sensors[j].name +
+                  + `Sensor ` + j + '('+ sensor + ')' +
                     `</span>
-                  <p>`
-                  + markerList[i].sensors[j].vari + ' : ' + sensorData[sensorData.length-1][markerList[i].sensors[j].vari] +
+                  <p>` +
+                  sensorData[sensorData.length-1][sensorTypes[sensor][j-1]] +
                     `</p>
                 </div>
                 <div class="card-action">
-                  <a href="#" data-sensor="sensor` + k + `" onclick="openMap(this);">Time Plot</a>
+                  <a href="#" data-sensor="sensor` + j + `" onclick="openMap(this);">Time Plot</a>
                 </div>
               </div>
             </div>`
             }
-            }
-          }
-        }
-        
-      var sensorData = JSON.parse(sensorAjax(markerList[0].url));
+      }
+
 
       function openMap(d) {
         sensor = d.getAttribute('data-sensor')
@@ -211,6 +245,45 @@
       });
 
       }
+
+      interact('.draggable')
+          .draggable({
+            // enable inertial throwing
+            inertia: true,
+            // keep the element within the area of it's parent
+            restrict: {
+              restriction: "parent",
+              elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
+            },
+            // enable autoScroll
+            autoScroll: true,
+
+            // call this function on every dragmove event
+            onmove: dragMoveListener,
+            // call this function on every dragend event
+            onend: function (event) {
+              var textEl = event.target.querySelector('p');
+            }
+          });
+
+        function dragMoveListener(event) {
+          var target = event.target,
+            // keep the dragged position in the data-x/data-y attributes
+            x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx,
+            y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+          // translate the element
+          target.style.webkitTransform =
+            target.style.transform =
+            'translate(' + x + 'px, ' + y + 'px)';
+
+          // update the posiion attributes
+          target.setAttribute('data-x', x);
+          target.setAttribute('data-y', y);
+        }
+
+        // this is used later in the resizing and gesture demos
+        window.dragMoveListener = dragMoveListener;
       </script>
 
       <!--   Icon Section   -->
