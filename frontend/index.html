@@ -80,14 +80,21 @@
 
         </div>
         <div class = "row" id="inter">
-          <div id="drag-1" class="draggable">
+          <img  alt="Layout" usemap="#layoutmap" src="/img/layout.png"  width="300" height="550" >
+
+          <map name="layoutmap">
+            <area shape="rect" coords="30,30,100,100" data-sensor="Toilet" onclick="openSensors(this);" alt="Toilet">
+            <area shape="circle" coords="90,58,3" href="mercur.htm" alt="Mercury">
+            <area shape="circle" coords="124,58,8" href="venus.htm" alt="Venus">
+          </map>
+          <!-- <div id="drag-1" class="draggable">
             <img src="/img/bathroom.png" style="width:100%">
           </div>
           <div id="drag-2" class="draggable">
             <img src="/img/tank.png" style="width:100%">
-          </div>
+          </div> -->
 
-          <style>
+          <!-- <style>
             #drag-1,
             #drag-2 {
               width: 10%;
@@ -114,7 +121,7 @@
               background-color: #666;
               max-height: 400px;
             }
-          </style>
+          </style> -->
         </div>
       </div>
 <script src="js/d3.min.js" charset="utf-8"></script>
